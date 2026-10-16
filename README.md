@@ -53,8 +53,7 @@ AI spend is now a financial risk. Costs hide across projects, models and API key
 
 ### Security and governance
 - Firebase Authentication ID token verified on every API call
-- Two roles: **Global Admin** and **Tenant Admin**
-- Tenant isolation: queries are scoped by tenant and assigned projects
+- Two roles in Production deployment, **Global Admin** and **Tenant Admin**.
 - Admin access management and an audit trail
 
 ---
@@ -106,7 +105,7 @@ flowchart LR
 
 The KillSwitch in this prototype is a **simulation**. Its simulate and recover endpoints record events and actions in BigQuery and the audit trail. They **do not** disable an API key, a service or a billing account, and the advisor is instructed never to claim otherwise.
 
-The production design is for the KillSwitch to call the **Cloud Billing API** when a project reaches its defined threshold, disabling billing on the breaching spoke project. That integration is on the roadmap.
+The production design is for the KillSwitch to call the **Cloud Billing API** when a project reaches its defined threshold, disabling billing on the breaching spoke project.
 
 ---
 
