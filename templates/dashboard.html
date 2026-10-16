@@ -116,6 +116,14 @@ button{cursor:pointer}
   box-shadow:inset 0 0 0 1px rgba(214,168,79,.55),0 4px 14px -4px rgba(0,0,0,.5);
 }
 .logo svg{width:1.05rem;height:1.05rem;stroke:#e2bd74;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.logo img{width:100%;height:100%;object-fit:contain;display:block}
+.login-brand-icon img,.login-mobile-brand .login-brand-icon img{
+  width:100%;height:100%;object-fit:contain;display:block
+}
+.login-brand-icon:has(img),.login-mobile-brand .login-brand-icon:has(img){
+  background:transparent;box-shadow:none
+}
+
 .brand>div:last-child{min-width:0}
 .brand b{display:block;color:#f4f7fb;font-size:var(--fs-sm);font-weight:var(--fw-bold);letter-spacing:-.012em;line-height:1.2;white-space:normal}
 .brand small{display:block;margin-top:2px;color:#71839c;font-size:var(--fs-xs)}
@@ -1012,7 +1020,7 @@ window.FIREBASE_CONFIG = {{ firebase_config | tojson }};
 </svg>
 {% endraw %}
       <div class="login-brand">
-        <div class="login-brand-icon"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></div>
+        <div class="login-brand-icon"><img src="/static/gac-logo-transparent.png" alt="GAC logo"></div>
         <div>
           <strong>One FinOps</strong>
           <span>AI usage &amp; cost intelligence</span>
@@ -1044,7 +1052,7 @@ window.FIREBASE_CONFIG = {{ firebase_config | tojson }};
     <section class="login-panel">
       <div class="login-panel-content">
         <div class="login-mobile-brand">
-          <div class="login-brand-icon"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></div>
+          <div class="login-brand-icon"><img src="/static/gac-logo-transparent.png" alt="GAC logo"></div>
           One FinOps
         </div>
         <div class="login-eyebrow">Welcome</div>
@@ -1067,7 +1075,7 @@ window.FIREBASE_CONFIG = {{ firebase_config | tojson }};
 <!-- SIDEBAR -->
 <aside class="side">
   <div class="brand">
-    <div class="logo"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></div>
+    <div class="logo"><img src="/static/gac-logo-transparent.png" alt="GAC logo"></div>
     <div><b>One FinOps</b><small>Intelligence</small></div>
   </div>
   <nav class="nav" id="nav"></nav>
@@ -2182,9 +2190,9 @@ const KS_NEAR=.75;
 const ksRows=()=>{const t=+(KS.d&&KS.d.threshold)||.9;return ((KS.d&&KS.d.projects)||[]).map(p=>{
   const u=(+p.budget_usd>0)?(+p.spend_usd||0)/(+p.budget_usd):0,st=p.state||"armed";
   return{name:p.project_id,budget:+p.budget_usd||0,spend:+p.spend_usd||0,util:u,state:st,pending:false}})};
-const ksLbl=v=>{v=String(v==null?"":v);return v==="tripped"?"Triggered":v==="armed"?"Active":cap(v)};
+const ksLbl=v=>{v=String(v==null?"":v);return ({tripped:"Triggered",armed:"Active",warning:"Warning simulated",notified:"Admin notified (simulated)"})[v]||cap(v)};
 const ksTxt=t=>String(t==null?"":t).replace(/\bTripped\b/g,"Triggered").replace(/\btripped\b/g,"triggered").replace(/\bTrips\b/g,"Triggers").replace(/\btrips\b/g,"triggers").replace(/\btrip\b/g,"trigger");
-const ksTone=s=>({tripped:"bad",armed:"good",recovering:"warn",simulated:"info"}[s]||"");
+const ksTone=s=>({tripped:"bad",armed:"good",warning:"warn",notified:"info",recovering:"warn",simulated:"info"}[s]||"");
 const ksCol=(u,t)=>u>=t?"var(--bad)":u>=KS_NEAR?"var(--warn)":"var(--good)";
 
 const KS_CK="ks.status.v1";
@@ -2220,14 +2228,14 @@ function ksFetch(fresh){
   return ksInflight;
 }
 
-async function ksAct(action,project){
+async function ksAct(action,project,pct=90){
   if(!KS.d)return;
   if(action==="recover"&&!confirm("Recover "+project+"? This re-arms the KillSwitch for the project."))return;
   try{
     const u=firebase.auth().currentUser;
     const r=await fetch("/api/killswitch/"+action,{method:"POST",
       headers:{"Content-Type":"application/json","Authorization":"Bearer "+await u.getIdToken()},
-      body:JSON.stringify({project_id:project})});
+      body:JSON.stringify({project_id:project,threshold_pct:pct})});
     const j=await r.json().catch(()=>({}));
     toast(r.ok?(j.message||"Done"):(j.error||"Request failed ("+r.status+")"));
   }catch(e){toast("Network error")}
@@ -2413,7 +2421,7 @@ function ksPage(){
     {k:"budget",l:"Budget",r:1,f:usd},{k:"spend",l:"Spend",r:1,f:usd},
     {k:"util",l:"Utilization",f:(v)=>`<div class="share" style="justify-content:flex-start"><div class="ksb"><i style="width:${Math.min(100,v*100)}%;background:${ksCol(v,t)}"></i><u style="left:${t*100}%"></u></div><b>${P(v)}</b></div>`},
     {k:"state",l:"Status",f:(v,x)=>`<span class="kst ${ksTone(v)}" ${x.pending?'title="Budget crossed the trigger; KillSwitch confirmation pending"':""}>${esc(ksLbl(v))}${x.pending?" · pending":""}</span>`},
-    {k:"act",l:"",r:1,f:(v,x)=>`<div class="ksact"><button class="ib" data-ks="simulate" data-p="${esc(x.name)}">Simulate</button>${x.state==="tripped"?`<button class="ib" data-ks="recover" data-p="${esc(x.name)}" ${can?"":'disabled title="Administrator only"'}>Recover</button>`:""}</div>`}
+    {k:"act",l:"",r:1,f:(v,x)=>`<div class="ksact" style="display:flex;flex-wrap:wrap;gap:4px"><button class="ib" data-ks="simulate" data-pct="50" data-p="${esc(x.name)}">50%</button><button class="ib" data-ks="simulate" data-pct="70" data-p="${esc(x.name)}">70%</button><button class="ib" data-ks="simulate" data-pct="90" data-p="${esc(x.name)}">90%</button>${["warning","notified","tripped"].includes(x.state)?`<button class="ib" data-ks="recover" data-p="${esc(x.name)}" ${can?"":'disabled title="Administrator only"'}>Recover</button>`:""}</div>`}
   ],rows.map(x=>({...x,act:""})),"util");
 
   table("tKSEv",[
@@ -2890,7 +2898,7 @@ document.addEventListener("input",e=>{if(e.target&&e.target.id==="advQ"){e.targe
 
 document.addEventListener("click",e=>{
   const b=e.target.closest("#tKS [data-ks]");
-  if(b&&!b.disabled)ksAct(b.dataset.ks,b.dataset.p);
+  if(b&&!b.disabled)ksAct(b.dataset.ks,b.dataset.p,Number(b.dataset.pct)||90);
 });
 
 /* ================= GRID LAYOUT ================= */
