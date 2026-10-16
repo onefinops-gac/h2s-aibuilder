@@ -1,4 +1,3 @@
-<img width="427" height="357" alt="gac-logo-transparent" src="https://github.com/user-attachments/assets/bd0f6f07-3c7d-4488-ba15-f63c8669fa38" />
 
 # One FinOps
 
