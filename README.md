@@ -174,17 +174,7 @@ Never commit real keys or project secrets. Supply them through Cloud Run environ
 
 ## Run and deploy
 
-**Prerequisites:** a Google Cloud project with BigQuery, Firestore, Vertex AI and Cloud Run enabled, and a Firebase project with Authentication turned on.
-
-**Run locally**
-
-```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-gcloud auth application-default login
-export MGMT_PROJECT_ID=... BQ_DATASET=... KS_DATASET=...   # plus the variables above
-python app.py                                               # serves on PORT (default 8080)
-```
+**Prerequisites:** a Google Cloud Hub and Spoke projects. Hub Project with BigQuery, Firestore, Vertex AI and Cloud Run enabled, and a Firebase project with Authentication turned on. Spoke Project logs send to Hub Project's BigQuery.
 
 **Deploy to Cloud Run**
 
