@@ -196,4 +196,3 @@ gcloud run deploy one-finops \
 The service account needs read and write access to the BigQuery datasets, Firestore access, and the Vertex AI User role.
 
 
-`[Add a license]`
