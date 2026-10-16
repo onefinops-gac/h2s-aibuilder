@@ -195,17 +195,5 @@ gcloud run deploy one-finops \
 
 The service account needs read and write access to the BigQuery datasets, Firestore access, and the Vertex AI User role.
 
-## Roadmap
-
-- Live enforcement through the Cloud Billing API at the defined threshold
-- SSO and finer-grained roles
-- Slack and email alerts
-- BFSI controls such as data-residency options
-
-## Team
-
-`[Team name]` · AI Builder Cup 2026
-
-## License
 
 `[Add a license]`
