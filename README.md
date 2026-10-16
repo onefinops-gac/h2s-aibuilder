@@ -6,13 +6,6 @@ Built for the **AI Builder Cup** · Track: **BFSI: Intelligent Risk, Fraud & Fin
 
 One FinOps gives banks, insurers and other regulated organisations a single, governed view of AI usage and cost across every project, model and user. It tracks token usage, forecasts spend, warns before budgets are breached, and uses a Gemini-powered advisor to review, recommend and answer questions, all grounded in real usage data.
 
-> **Note:** all data in the demo environment is mock data, for evaluation only.
-
-| | |
-|---|---|
-| Live prototype | `[deployed Cloud Run link]` |
-| Demo video (3-4 min) | `[video link]` |
-| Pitch deck | `[deck link]` |
 
 ---
 
