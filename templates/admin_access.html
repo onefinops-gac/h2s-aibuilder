@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Access management · Enterprise AI FinOps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+{% raw %}
+<style>
+:root{
+  color-scheme:light;
+  --font-ui:"Geist","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --font-display:"Instrument Serif","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --ink:#0b1b2b; --ink2:#08131f;
+  --bg:#f3f5f8; --surface:#fff; --surface2:#f8f9fb;
+  --border:#e2e6ed; --border2:#edf0f5;
+  --text:#0f1b2d; --text2:#46536a; --muted:#78859a;
+  --accent:#0e7c66; --soft:#e5f2ee;
+  --brass:#b8893a; --brass-soft:#f6edd9;
+  --good:#0e7c4f; --goodbg:#e3f3ea;
+  --bad:#b83a32; --badbg:#fbeae8;
+  --warn:#96660d; --warnbg:#fbf1dc;
+  --shadow:0 1px 2px rgba(11,27,43,.04),0 6px 18px -10px rgba(11,27,43,.10);
+}
+*{box-sizing:border-box}
+html{font-size:15.5px}
+body{margin:0;background:var(--bg);color:var(--text);font:450 .875rem/1.55 var(--font-ui);letter-spacing:-.006em;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;letter-spacing:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.muted{color:var(--muted)}
+
+/* ---------- Shared controls ---------- */
+label{display:block;margin:0 0 .4rem;font-size:.78rem;font-weight:560;color:var(--text2)}
+input,select{width:100%;height:2.7rem;padding:0 .85rem;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);outline:0;transition:border-color .15s,box-shadow .15s}
+input::placeholder{color:#9aa6b8}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,124,102,.16)}
+input:disabled,select:disabled{background:var(--surface2);color:var(--muted);cursor:not-allowed}
+select{appearance:none;-webkit-appearance:none;padding-right:2.2rem;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2378859a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .8rem center}
+button{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;height:2.5rem;padding:0 1.05rem;border:1px solid var(--ink);border-radius:9px;background:var(--ink);color:#fff;font-size:.8125rem;font-weight:560;cursor:pointer;white-space:nowrap;box-shadow:0 1px 2px rgba(11,27,43,.2);transition:background .15s,border-color .15s,color .15s}
+button:hover{background:#13304d;border-color:#13304d}
+button.secondary{background:var(--surface);border-color:var(--border);color:var(--text2);box-shadow:0 1px 1px rgba(11,27,43,.03)}
+button.secondary:hover{background:var(--surface);border-color:#b9c3d2;color:var(--text)}
+button.danger{background:var(--surface);border-color:#f0cfcb;color:var(--bad);box-shadow:none}
+button.danger:hover{background:var(--badbg);border-color:#e7b4ae}
+button svg{width:.95rem;height:.95rem;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.status{min-height:1.2rem;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.82rem;color:var(--text2)}
+#loginStatus{color:var(--bad)}
+
+/* ---------- Sign-in ---------- */
+#login{display:block;min-height:100vh}
+.al{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(420px,.92fr);min-height:100vh}
+.al-show{
+  position:relative;display:flex;flex-direction:column;gap:2rem;overflow:hidden;isolation:isolate;
+  padding:clamp(28px,4.2vw,64px) clamp(28px,5vw,80px);color:#f2f6fb;background:#050b16;
+}
+.al-show>.ar{position:absolute;inset:0;width:100%;height:100%;z-index:-2}
+.al-show::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(90deg,rgba(5,11,22,.62) 0%,rgba(5,11,22,.2) 55%,transparent 80%),linear-gradient(0deg,rgba(5,11,22,.7),transparent 35%)}
+.al-show>*:not(.ar){position:relative;z-index:1}
+.brandrow{display:flex;align-items:center;gap:.8rem}
+.mark{width:2.5rem;height:2.5rem;flex:none;display:grid;place-items:center;border-radius:11px;background:linear-gradient(145deg,#16314f,#0c2038);box-shadow:inset 0 0 0 1px rgba(214,168,79,.6),0 6px 18px -6px rgba(0,0,0,.6)}
+.mark svg{width:1.15rem;height:1.15rem;stroke:#e2bd74;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.brandrow strong{display:block;font-size:1rem;font-weight:600;letter-spacing:-.012em;color:#f4f7fb}
+.brandrow span{display:block;margin-top:2px;color:#8da0ba;font-size:.78rem}
+.al-hero{max-width:34rem;margin-top:clamp(.5rem,3vh,2.5rem)}
+.al-hero h1{margin:0 0 1rem;font-family:var(--font-display);font-weight:400;font-size:clamp(2.8rem,5vw,4.6rem);line-height:1;letter-spacing:-.022em;color:#fff}
+.al-hero p{margin:0;max-width:30rem;color:#a9b9cf;font-size:1rem;line-height:1.65}
+
+/* Access model card */
+.model{width:min(31rem,100%);padding:1.2rem 1.25rem;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.035));border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 60px -28px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.07)}
+.model-head{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:#9fb1c8;margin-bottom:.9rem}
+.model-head em{font-style:normal;font-size:.7rem;padding:.12rem .55rem;border-radius:99px;border:1px solid rgba(214,168,79,.45);color:#e2bd74}
+.tier{position:relative;display:flex;gap:.85rem;align-items:flex-start;padding:.1rem 0 1rem}
+.tier:last-child{padding-bottom:0}
+.tier::before{content:"";position:absolute;left:.8rem;top:1.9rem;bottom:.1rem;width:1px;background:rgba(255,255,255,.14)}
+.tier:last-child::before{display:none}
+.tier-dot{flex:none;width:1.65rem;height:1.65rem;border-radius:50%;display:grid;place-items:center;background:rgba(226,189,116,.14);box-shadow:inset 0 0 0 1px rgba(226,189,116,.5)}
+.tier-dot svg{width:.85rem;height:.85rem;stroke:#e2bd74;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tier b{display:block;font-size:.86rem;font-weight:560;color:#eef3f9}
+.tier small{display:block;margin-top:.1rem;font-size:.78rem;color:#9fb1c8;line-height:1.5}
+.tier code{font:500 .74rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#cfe0f3;background:rgba(255,255,255,.07);padding:.05rem .4rem;border-radius:5px}
+
+.al-points{margin-top:auto;display:grid;gap:1rem;max-width:20rem}
+.al-point{display:flex;gap:.8rem;align-items:flex-start;font-size:.86rem;line-height:1.5;color:#a9b9cf}
+.al-point svg{flex:none;width:1.15rem;height:1.15rem;margin-top:.15rem;stroke:#e2bd74;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.al-point b{display:block;color:#eef3f9;font-weight:560}
+
+.al-form{position:relative;background:radial-gradient(60% 40% at 100% 0%,rgba(14,124,102,.10),transparent 70%),var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:3rem clamp(24px,5vw,80px)}
+.al-form-in{position:relative;width:100%;max-width:27rem;padding:2.5rem 2.4rem 2.2rem;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 1px 2px rgba(11,27,43,.04),0 40px 80px -40px rgba(11,27,43,.28)}
+.al-form-in::before{content:"";position:absolute;left:2.4rem;right:2.4rem;top:-1px;height:2px;border-radius:0 0 2px 2px;background:linear-gradient(90deg,transparent,var(--brass),transparent)}
+.al-mobile{display:none}
+.al-form h2{margin:0 0 .6rem;font-family:var(--font-display);font-weight:400;font-size:2.5rem;line-height:1.05;letter-spacing:-.02em}
+.al-form .lead{margin:0 0 1.6rem;color:var(--text2);font-size:.95rem;line-height:1.6}
+.field{margin-bottom:1rem}
+.al-form .submit{width:100%;height:3rem;margin-top:.5rem;font-size:.9rem}
+.note{display:flex;gap:.75rem;align-items:flex-start;margin-top:1.1rem;padding:.95rem 1rem;border:1px solid var(--border);border-radius:11px;background:var(--surface2)}
+.note svg{flex:none;width:1.1rem;height:1.1rem;margin-top:.1rem;stroke:var(--good);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.note b{display:block;font-size:.82rem;font-weight:560}
+.note small{display:block;margin-top:.2rem;color:var(--muted);font-size:.78rem;line-height:1.55}
+.al-foot{width:100%;max-width:27rem;margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border);color:var(--muted);font-size:.75rem}
+
+/* ---------- Console ---------- */
+#portal{display:none;min-height:100vh}
+.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:1rem;padding:.7rem clamp(16px,3vw,40px);background:linear-gradient(180deg,#0e2036,var(--ink));border-bottom:1px solid rgba(255,255,255,.06)}
+.top .mark{width:2.2rem;height:2.2rem}
+.top .mark svg{width:1.05rem;height:1.05rem}
+.top .brandrow strong{font-size:.9rem}
+.top .brandrow span{font-size:.74rem}
+.top-sp{flex:1}
+.top .admin-actions{align-items:center}
+.top button{height:2.25rem;font-size:.78rem}
+.top button.secondary{background:transparent;border-color:rgba(255,255,255,.16);color:#c5d2e3;box-shadow:none}
+.top button.secondary:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.28);color:#fff}
+.top button.signout{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.1);box-shadow:none}
+.top button.signout:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.18)}
+.wrap{max-width:1280px;margin:0 auto;padding:2rem clamp(16px,3vw,40px) 4rem}
+.pagehead{margin-bottom:1.5rem}
+.pagehead h1{margin:0;font-family:var(--font-display);font-weight:400;font-size:2.4rem;line-height:1.05;letter-spacing:-.02em}
+.pagehead p{margin:.55rem 0 0;max-width:46rem;color:var(--text2);font-size:.9rem;line-height:1.6}
+
+.admin-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.85rem;margin-bottom:1rem}
+.admin-stat{padding:1.05rem 1.2rem;border:1px solid var(--border);border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
+.admin-stat span{display:flex;align-items:center;gap:.5rem;color:var(--text2);font-size:.8rem;font-weight:500}
+.admin-stat span::before{content:"";width:.5rem;height:.5rem;border-radius:50%;background:var(--muted)}
+.admin-stat.s-active span::before{background:var(--good);box-shadow:0 0 0 3px var(--goodbg)}
+.admin-stat.s-pending span::before{background:#d29a2a;box-shadow:0 0 0 3px var(--warnbg)}
+.admin-stat.s-disabled span::before{background:var(--bad);box-shadow:0 0 0 3px var(--badbg)}
+.admin-stat strong{display:block;margin-top:.55rem;font-size:2rem;font-weight:560;letter-spacing:-.04em;line-height:1.05}
+.admin-stat small{display:block;margin-top:.3rem;color:var(--muted);font-size:.76rem}
+
+.panel{margin-bottom:1rem;padding:clamp(18px,2vw,26px);border:1px solid var(--border);border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
+.panel h2{margin:0;font-size:1rem;font-weight:600;letter-spacing:-.012em}
+.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1.1rem}
+.panel-head p{margin:.25rem 0 0;color:var(--muted);font-size:.8rem}
+.count{display:inline-block;margin-left:.5rem;padding:0 .55rem;border-radius:99px;background:var(--border2);color:var(--text2);font-size:.74rem;font-weight:560;vertical-align:1px}
+
+.assign-grid{display:grid;grid-template-columns:1.3fr .9fr 1fr 1.4fr auto;gap:.85rem;align-items:end}
+.assign-grid .field{margin:0}
+.assign-grid button{height:2.7rem}
+.scope-note{display:flex;gap:.7rem;margin:1.1rem 0 .2rem;padding:.85rem 1rem;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);font-size:.8rem;line-height:1.65}
+.scope-note svg{flex:none;width:1rem;height:1rem;margin-top:.22rem;stroke:var(--muted);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+.admin-filters{display:grid;grid-template-columns:minmax(0,1fr) 11rem 11rem;gap:.7rem;margin-bottom:1rem}
+.admin-filters input,.admin-filters select{height:2.6rem}
+.admin-filters input{padding-left:2.4rem;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2378859a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E") no-repeat .85rem center}
+
+table{width:100%;border-collapse:separate;border-spacing:0}
+.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:11px}
+th{padding:.7rem 1rem;background:var(--surface2);border-bottom:1px solid var(--border);color:var(--muted);font-size:.76rem;font-weight:560;text-align:left;white-space:nowrap}
+td{padding:.85rem 1rem;border-bottom:1px solid var(--border2);font-size:.84rem;color:var(--text2);vertical-align:middle;overflow-wrap:break-word}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--surface2)}
+td:first-child{color:var(--text);font-weight:500}
+td:last-child{min-width:10rem}
+.admin-actions{display:flex;gap:.45rem;flex-wrap:wrap}
+td .admin-actions button{height:2rem;padding:0 .75rem;font-size:.76rem}
+.role-tag{display:inline-block;padding:.12rem .55rem;border-radius:6px;background:var(--border2);color:var(--text2);font-size:.76rem;font-weight:500;white-space:nowrap}
+.role-tag.global{background:var(--brass-soft);color:#7a5714}
+.status-pill{display:inline-flex;align-items:center;gap:.4rem;padding:.14rem .65rem .14rem .55rem;border-radius:99px;background:var(--goodbg);color:var(--good);font-size:.76rem;font-weight:560;white-space:nowrap;text-transform:capitalize}
+.status-pill::before{content:"";width:.4rem;height:.4rem;border-radius:50%;background:currentColor}
+.status-pill.pending{background:var(--warnbg);color:var(--warn)}
+.status-pill.disabled{background:var(--badbg);color:var(--bad)}
+.status-pill.temporary{background:var(--border2);color:var(--text2)}
+.empty-state{padding:2rem 1rem;border:1px dashed var(--border);border-radius:11px;background:var(--surface2);color:var(--muted);font-size:.84rem;text-align:center}
+#status{margin-top:.9rem}
+#status:empty{margin:0;min-height:0}
+.al-hero h1,.pagehead h1,.al-form h2{text-wrap:balance}
+
+@media(max-width:1100px){
+  .assign-grid{grid-template-columns:1fr 1fr}
+  .assign-grid button{grid-column:1/-1}
+}
+@media(max-width:900px){
+  table{min-width:46rem}
+  .al{grid-template-columns:1fr}
+  .al-show{display:none}
+  .al-form{min-height:100vh;padding:2rem 1.5rem}
+  .al-mobile{display:flex;align-items:center;gap:.65rem;margin-bottom:2.5rem;font-weight:600;font-size:.95rem}
+  .al-mobile .mark{width:2.2rem;height:2.2rem}
+  .admin-stats{grid-template-columns:1fr 1fr}
+  .top{flex-wrap:wrap}
+  .top .admin-actions{width:100%}
+}
+@media(max-width:700px){
+  .assign-grid,.admin-filters{grid-template-columns:1fr}
+}
+@media(max-height:760px){.al-points{display:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+{% endraw %}
+</head>
+<body>
+
+<section id="login">
+  <div class="al">
+    <section class="al-show">
+{% raw %}
+<svg class="ar" viewBox="0 0 750 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+<defs>
+<radialGradient id="arBg" cx="68%" cy="48%" r="75%"><stop offset="0" stop-color="#12395c"/><stop offset=".45" stop-color="#0a1e36"/><stop offset="1" stop-color="#050b16"/></radialGradient>
+<radialGradient id="arOrb" cx="38%" cy="32%" r="80%"><stop offset="0" stop-color="#9af0d8"/><stop offset=".22" stop-color="#25b596"/><stop offset=".55" stop-color="#0d5a66"/><stop offset=".85" stop-color="#0a2748"/><stop offset="1" stop-color="#050b16"/></radialGradient>
+<radialGradient id="arHalo" cx="50%" cy="50%" r="50%"><stop offset=".5" stop-color="#2fd0aa" stop-opacity=".30"/><stop offset=".75" stop-color="#1c6fb0" stop-opacity=".12"/><stop offset="1" stop-color="#1c6fb0" stop-opacity="0"/></radialGradient>
+<radialGradient id="arBrass" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#e2bd74" stop-opacity=".35"/><stop offset="1" stop-color="#e2bd74" stop-opacity="0"/></radialGradient>
+<linearGradient id="arRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3d79a" stop-opacity=".95"/><stop offset=".35" stop-color="#e2bd74" stop-opacity=".0"/><stop offset="1" stop-color="#e2bd74" stop-opacity="0"/></linearGradient>
+<linearGradient id="arStream" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#e2bd74" stop-opacity="0"/><stop offset=".6" stop-color="#e2bd74" stop-opacity=".7"/><stop offset="1" stop-color="#9af0d8" stop-opacity=".9"/></linearGradient>
+<filter id="arGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2"/></filter>
+<filter id="arBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="38"/></filter>
+<clipPath id="arClip"><circle cx="565" cy="585" r="165"/></clipPath>
+</defs>
+<style>
+.ar .flow{stroke-dasharray:3 14;animation:arflow 6s linear infinite}
+.ar .flow.b{animation-duration:9s}
+.ar .tw{animation:artw 4s ease-in-out infinite}
+.ar .tw.b{animation-delay:1.3s}.ar .tw.c{animation-delay:2.4s}
+.ar .pulse{transform-origin:565px 585px;animation:arpulse 7s ease-in-out infinite}
+.ar .spin{transform-origin:565px 585px;animation:arspin 90s linear infinite}
+@keyframes arflow{to{stroke-dashoffset:-34}}
+@keyframes artw{0%,100%{opacity:.25}50%%{opacity:1}}
+@keyframes arpulse{0%,100%{opacity:.8;transform:scale(1)}50%%{opacity:1;transform:scale(1.04)}}
+@keyframes arspin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.ar *{animation:none!important}}
+</style>
+<rect width="750" height="900" fill="url(#arBg)"/>
+<g filter="url(#arBlur)" opacity=".85"><ellipse cx="640" cy="140" rx="190" ry="110" fill="#1b6fb8" opacity=".45"/><ellipse cx="120" cy="820" rx="220" ry="120" fill="#b8893a" opacity=".28"/><ellipse cx="430" cy="760" rx="200" ry="90" fill="#0e7c66" opacity=".40"/></g>
+<g stroke="#9bb6d4" stroke-opacity=".05"><line x1="0" y1="0" x2="0" y2="900"/><line x1="60" y1="0" x2="60" y2="900"/><line x1="120" y1="0" x2="120" y2="900"/><line x1="180" y1="0" x2="180" y2="900"/><line x1="240" y1="0" x2="240" y2="900"/><line x1="300" y1="0" x2="300" y2="900"/><line x1="360" y1="0" x2="360" y2="900"/><line x1="420" y1="0" x2="420" y2="900"/><line x1="480" y1="0" x2="480" y2="900"/><line x1="540" y1="0" x2="540" y2="900"/><line x1="600" y1="0" x2="600" y2="900"/><line x1="660" y1="0" x2="660" y2="900"/><line x1="720" y1="0" x2="720" y2="900"/><line x1="0" y1="0" x2="750" y2="0"/><line x1="0" y1="60" x2="750" y2="60"/><line x1="0" y1="120" x2="750" y2="120"/><line x1="0" y1="180" x2="750" y2="180"/><line x1="0" y1="240" x2="750" y2="240"/><line x1="0" y1="300" x2="750" y2="300"/><line x1="0" y1="360" x2="750" y2="360"/><line x1="0" y1="420" x2="750" y2="420"/><line x1="0" y1="480" x2="750" y2="480"/><line x1="0" y1="540" x2="750" y2="540"/><line x1="0" y1="600" x2="750" y2="600"/><line x1="0" y1="660" x2="750" y2="660"/><line x1="0" y1="720" x2="750" y2="720"/><line x1="0" y1="780" x2="750" y2="780"/><line x1="0" y1="840" x2="750" y2="840"/></g>
+<circle class="pulse" cx="565" cy="585" r="346" fill="url(#arHalo)"/>
+<circle cx="565" cy="585" r="248" fill="url(#arBrass)" opacity=".5"/>
+<g stroke="#8fb4dc" stroke-opacity=".16" stroke-width=".8"><line x1="345.7" y1="501.4" x2="385.6" y2="525.2"/><line x1="345.7" y1="501.4" x2="379.8" y2="589.7"/><line x1="685.4" y1="420.5" x2="675.4" y2="424.2"/><line x1="685.4" y1="420.5" x2="710.6" y2="436.0"/><line x1="385.6" y1="525.2" x2="379.8" y2="589.7"/><line x1="153.0" y1="460.2" x2="74.2" y2="489.6"/><line x1="153.0" y1="460.2" x2="195.0" y2="537.1"/><line x1="85.3" y1="716.3" x2="80.3" y2="665.2"/><line x1="85.3" y1="716.3" x2="146.3" y2="639.5"/><line x1="519.3" y1="56.0" x2="400.4" y2="71.2"/><line x1="519.3" y1="56.0" x2="593.9" y2="172.8"/><line x1="727.2" y1="849.7" x2="738.3" y2="876.3"/><line x1="727.2" y1="849.7" x2="735.2" y2="776.6"/><line x1="133.4" y1="32.9" x2="121.0" y2="50.2"/><line x1="133.4" y1="32.9" x2="92.8" y2="71.5"/><line x1="400.4" y1="71.2" x2="340.9" y2="72.0"/><line x1="400.4" y1="71.2" x2="323.4" y2="109.3"/><line x1="337.2" y1="744.5" x2="337.2" y2="741.0"/><line x1="337.2" y1="744.5" x2="320.4" y2="699.9"/><line x1="379.8" y1="589.7" x2="367.2" y2="648.2"/><line x1="738.3" y1="876.3" x2="735.2" y2="776.6"/><line x1="228.1" y1="80.4" x2="233.4" y2="83.1"/><line x1="228.1" y1="80.4" x2="323.4" y2="109.3"/><line x1="571.7" y1="364.3" x2="544.3" y2="354.1"/><line x1="571.7" y1="364.3" x2="629.5" y2="352.4"/><line x1="629.5" y1="352.4" x2="576.3" y2="302.9"/><line x1="709.8" y1="748.7" x2="735.2" y2="776.6"/><line x1="709.8" y1="748.7" x2="719.1" y2="710.9"/><line x1="675.4" y1="424.2" x2="710.6" y2="436.0"/><line x1="725.9" y1="361.8" x2="685.4" y2="420.5"/><line x1="725.9" y1="361.8" x2="710.6" y2="436.0"/><line x1="72.6" y1="561.3" x2="77.7" y2="569.9"/><line x1="72.6" y1="561.3" x2="35.3" y2="567.1"/><line x1="580.5" y1="252.0" x2="576.3" y2="302.9"/><line x1="580.5" y1="252.0" x2="593.9" y2="172.8"/><line x1="92.8" y1="71.5" x2="121.0" y2="50.2"/><line x1="593.9" y1="172.8" x2="680.5" y2="195.4"/><line x1="157.3" y1="649.4" x2="146.3" y2="639.5"/><line x1="157.3" y1="649.4" x2="191.7" y2="625.9"/><line x1="114.3" y1="573.6" x2="77.7" y2="569.9"/><line x1="114.3" y1="573.6" x2="72.6" y2="561.3"/><line x1="719.1" y1="710.9" x2="674.1" y2="723.3"/><line x1="239.0" y1="781.0" x2="280.7" y2="786.2"/><line x1="239.0" y1="781.0" x2="205.0" y2="728.4"/><line x1="92.2" y1="870.8" x2="47.9" y2="847.9"/><line x1="92.2" y1="870.8" x2="161.5" y2="837.1"/><line x1="576.3" y1="302.9" x2="544.3" y2="354.1"/><line x1="233.4" y1="83.1" x2="323.4" y2="109.3"/><line x1="84.9" y1="521.2" x2="74.2" y2="489.6"/><line x1="84.9" y1="521.2" x2="72.6" y2="561.3"/><line x1="195.0" y1="537.1" x2="114.3" y2="573.6"/><line x1="433.7" y1="765.2" x2="422.7" y2="753.1"/><line x1="433.7" y1="765.2" x2="337.2" y2="744.5"/><line x1="674.1" y1="723.3" x2="709.8" y2="748.7"/><line x1="674.1" y1="723.3" x2="668.6" y2="769.1"/><line x1="552.4" y1="828.7" x2="524.7" y2="848.0"/><line x1="552.4" y1="828.7" x2="550.6" y2="794.2"/><line x1="161.5" y1="837.1" x2="239.0" y2="781.0"/><line x1="323.4" y1="109.3" x2="340.9" y2="72.0"/><line x1="47.9" y1="847.9" x2="32.9" y2="802.8"/><line x1="191.7" y1="625.9" x2="146.3" y2="639.5"/><line x1="205.0" y1="728.4" x2="157.3" y2="649.4"/><line x1="422.7" y1="753.1" x2="337.2" y2="744.5"/><line x1="680.5" y1="195.4" x2="580.5" y2="252.0"/><line x1="280.7" y1="786.2" x2="337.2" y2="744.5"/><line x1="32.9" y1="802.8" x2="92.2" y2="870.8"/><line x1="524.7" y1="848.0" x2="550.6" y2="794.2"/><line x1="35.3" y1="567.1" x2="77.7" y2="569.9"/><line x1="367.2" y1="648.2" x2="320.4" y2="699.9"/><line x1="249.6" y1="879.4" x2="161.5" y2="837.1"/><line x1="249.6" y1="879.4" x2="280.7" y2="786.2"/><line x1="74.2" y1="489.6" x2="72.6" y2="561.3"/><line x1="550.6" y1="794.2" x2="591.2" y2="806.9"/><line x1="591.2" y1="806.9" x2="552.4" y2="828.7"/><line x1="273.3" y1="609.2" x2="191.7" y2="625.9"/><line x1="273.3" y1="609.2" x2="367.2" y2="648.2"/><line x1="668.6" y1="769.1" x2="709.8" y2="748.7"/><line x1="320.4" y1="699.9" x2="337.2" y2="741.0"/><line x1="735.2" y1="776.6" x2="668.6" y2="769.1"/><line x1="80.3" y1="665.2" x2="146.3" y2="639.5"/></g>
+<g fill="#cfe3f7"><circle cx="345.7" cy="501.4" r="1.0" opacity="0.39"/><circle cx="685.4" cy="420.5" r="1.0" opacity="0.47"/><circle cx="385.6" cy="525.2" r="1.2" opacity="0.68"/><circle cx="153.0" cy="460.2" r="1.0" opacity="0.47"/><circle cx="85.3" cy="716.3" r="2.0" opacity="0.37"/><circle cx="519.3" cy="56.0" r="1.0" opacity="0.42"/><circle cx="727.2" cy="849.7" r="1.2" opacity="0.56"/><circle cx="133.4" cy="32.9" r="1.2" opacity="0.48"/><circle cx="400.4" cy="71.2" r="1.6" opacity="0.55"/><circle cx="337.2" cy="744.5" r="2.0" opacity="0.47"/><circle cx="379.8" cy="589.7" r="1.2" opacity="0.40"/><circle cx="738.3" cy="876.3" r="1.6" opacity="0.34"/><circle cx="228.1" cy="80.4" r="2.0" opacity="0.61"/><circle cx="571.7" cy="364.3" r="1.2" opacity="0.65"/><circle cx="629.5" cy="352.4" r="2.0" opacity="0.35"/><circle cx="709.8" cy="748.7" r="1.6" opacity="0.34"/><circle cx="675.4" cy="424.2" r="1.2" opacity="0.47"/><circle cx="725.9" cy="361.8" r="1.0" opacity="0.57"/><circle cx="72.6" cy="561.3" r="1.6" opacity="0.62"/><circle cx="580.5" cy="252.0" r="1.0" opacity="0.45"/><circle cx="92.8" cy="71.5" r="1.6" opacity="0.67"/><circle cx="593.9" cy="172.8" r="2.0" opacity="0.42"/><circle cx="157.3" cy="649.4" r="2.0" opacity="0.55"/><circle cx="114.3" cy="573.6" r="2.0" opacity="0.39"/><circle cx="719.1" cy="710.9" r="1.0" opacity="0.38"/><circle cx="239.0" cy="781.0" r="1.0" opacity="0.56"/><circle cx="92.2" cy="870.8" r="1.6" opacity="0.51"/><circle cx="576.3" cy="302.9" r="1.6" opacity="0.54"/><circle cx="233.4" cy="83.1" r="1.0" opacity="0.54"/><circle cx="84.9" cy="521.2" r="2.0" opacity="0.45"/><circle cx="195.0" cy="537.1" r="1.0" opacity="0.60"/><circle cx="710.6" cy="436.0" r="1.6" opacity="0.36"/><circle cx="433.7" cy="765.2" r="1.2" opacity="0.61"/><circle cx="674.1" cy="723.3" r="1.0" opacity="0.45"/><circle cx="552.4" cy="828.7" r="1.6" opacity="0.68"/><circle cx="161.5" cy="837.1" r="1.2" opacity="0.34"/><circle cx="323.4" cy="109.3" r="2.0" opacity="0.37"/><circle cx="47.9" cy="847.9" r="1.0" opacity="0.59"/><circle cx="191.7" cy="625.9" r="1.0" opacity="0.33"/><circle cx="205.0" cy="728.4" r="1.6" opacity="0.60"/><circle cx="146.3" cy="639.5" r="1.2" opacity="0.43"/><circle cx="422.7" cy="753.1" r="1.2" opacity="0.29"/><circle cx="680.5" cy="195.4" r="2.0" opacity="0.31"/><circle cx="340.9" cy="72.0" r="2.0" opacity="0.34"/><circle cx="280.7" cy="786.2" r="1.0" opacity="0.42"/><circle cx="121.0" cy="50.2" r="1.6" opacity="0.46"/><circle cx="32.9" cy="802.8" r="1.2" opacity="0.29"/><circle cx="524.7" cy="848.0" r="1.0" opacity="0.35"/><circle cx="35.3" cy="567.1" r="2.0" opacity="0.69"/><circle cx="367.2" cy="648.2" r="1.6" opacity="0.49"/><circle cx="249.6" cy="879.4" r="1.6" opacity="0.37"/><circle cx="74.2" cy="489.6" r="1.0" opacity="0.41"/><circle cx="550.6" cy="794.2" r="1.0" opacity="0.27"/><circle cx="591.2" cy="806.9" r="1.6" opacity="0.50"/><circle cx="273.3" cy="609.2" r="1.6" opacity="0.47"/><circle cx="668.6" cy="769.1" r="1.0" opacity="0.35"/><circle cx="320.4" cy="699.9" r="1.0" opacity="0.44"/><circle cx="77.7" cy="569.9" r="1.0" opacity="0.33"/><circle cx="735.2" cy="776.6" r="1.6" opacity="0.56"/><circle cx="544.3" cy="354.1" r="1.2" opacity="0.46"/><circle cx="337.2" cy="741.0" r="2.0" opacity="0.68"/><circle cx="80.3" cy="665.2" r="2.0" opacity="0.51"/></g>
+<g class="tw"><circle cx="280.7" cy="786.2" r="7" fill="#e2bd74" filter="url(#arGlow)"/><circle cx="280.7" cy="786.2" r="2.4" fill="#fff"/></g>
+<g class="tw b"><circle cx="519.3" cy="56.0" r="7" fill="#7be0c8" filter="url(#arGlow)"/><circle cx="519.3" cy="56.0" r="2.4" fill="#fff"/></g>
+<g class="tw c"><circle cx="35.3" cy="567.1" r="7" fill="#7be0c8" filter="url(#arGlow)"/><circle cx="35.3" cy="567.1" r="2.4" fill="#fff"/></g>
+<g class="tw"><circle cx="629.5" cy="352.4" r="7" fill="#e2bd74" filter="url(#arGlow)"/><circle cx="629.5" cy="352.4" r="2.4" fill="#fff"/></g>
+<g class="tw b"><circle cx="233.4" cy="83.1" r="7" fill="#7be0c8" filter="url(#arGlow)"/><circle cx="233.4" cy="83.1" r="2.4" fill="#fff"/></g>
+<g class="tw c"><circle cx="674.1" cy="723.3" r="7" fill="#7be0c8" filter="url(#arGlow)"/><circle cx="674.1" cy="723.3" r="2.4" fill="#fff"/></g>
+<g class="tw"><circle cx="161.5" cy="837.1" r="7" fill="#e2bd74" filter="url(#arGlow)"/><circle cx="161.5" cy="837.1" r="2.4" fill="#fff"/></g>
+<g class="tw b"><circle cx="72.6" cy="561.3" r="7" fill="#7be0c8" filter="url(#arGlow)"/><circle cx="72.6" cy="561.3" r="2.4" fill="#fff"/></g>
+<g class="tw c"><circle cx="591.2" cy="806.9" r="7" fill="#7be0c8" filter="url(#arGlow)"/><circle cx="591.2" cy="806.9" r="2.4" fill="#fff"/></g>
+<path d="M-20,760 C230,640 350,580 450,676" fill="none" stroke="url(#arStream)" stroke-opacity=".25" stroke-width="1"/>
+<path class="flow" d="M-20,760 C230,640 350,580 450,676" fill="none" stroke="url(#arStream)" stroke-width="2" stroke-linecap="round"/>
+<path d="M-20,560 C200,500 320,440 408,602" fill="none" stroke="url(#arStream)" stroke-opacity=".25" stroke-width="1"/>
+<path class="flow b" d="M-20,560 C200,500 320,440 408,602" fill="none" stroke="url(#arStream)" stroke-width="2" stroke-linecap="round"/>
+<path d="M60,900 C300,780 420,720 516,742" fill="none" stroke="url(#arStream)" stroke-opacity=".25" stroke-width="1"/>
+<path class="flow" d="M60,900 C300,780 420,720 516,742" fill="none" stroke="url(#arStream)" stroke-width="2" stroke-linecap="round"/>
+<path d="M-20,380 C180,330 300,270 416,527" fill="none" stroke="url(#arStream)" stroke-opacity=".25" stroke-width="1"/>
+<path class="flow b" d="M-20,380 C180,330 300,270 416,527" fill="none" stroke="url(#arStream)" stroke-width="2" stroke-linecap="round"/>
+<g class="spin"><ellipse cx="565" cy="585" rx="289" ry="82" transform="rotate(-22 565 585)" fill="none" stroke="#e2bd74" stroke-opacity=".38" stroke-width="1"/><circle cx="276" cy="585" r="0"/></g>
+<ellipse cx="565" cy="585" rx="239" ry="63" transform="rotate(-22 565 585)" fill="none" stroke="#7be0c8" stroke-opacity=".28" stroke-width="1" stroke-dasharray="2 6"/>
+<circle cx="565" cy="585" r="165" fill="url(#arOrb)"/>
+<g clip-path="url(#arClip)" fill="none" stroke="#c6f3e6" stroke-opacity=".22" stroke-width=".9"><ellipse cx="565" cy="585" rx="165.0" ry="165"/><ellipse cx="565" cy="585" rx="153.0" ry="165"/><ellipse cx="565" cy="585" rx="118.7" ry="165"/><ellipse cx="565" cy="585" rx="67.1" ry="165"/><ellipse cx="565" cy="585" rx="5.8" ry="165"/><ellipse cx="565" cy="585" rx="56.4" ry="165"/><ellipse cx="565" cy="585" rx="110.4" ry="165"/><ellipse cx="565" cy="585" rx="148.3" ry="165"/><ellipse cx="565" cy="585" rx="164.6" ry="165"/><ellipse cx="565" cy="434.3" rx="67.1" ry="17.4"/><ellipse cx="565" cy="470.4" rx="118.7" ry="30.9"/><ellipse cx="565" cy="523.2" rx="153.0" ry="39.8"/><ellipse cx="565" cy="585.0" rx="165.0" ry="42.9"/><ellipse cx="565" cy="646.8" rx="153.0" ry="39.8"/><ellipse cx="565" cy="699.6" rx="118.7" ry="30.9"/><ellipse cx="565" cy="735.7" rx="67.1" ry="17.4"/></g>
+<g clip-path="url(#arClip)"><g stroke="#e9fff8" stroke-opacity=".16" stroke-width=".6"><line x1="415" y1="637" x2="638" y2="703"/><line x1="512" y1="515" x2="629" y2="600"/><line x1="493" y1="482" x2="550" y2="703"/><line x1="541" y1="613" x2="415" y2="609"/><line x1="562" y1="625" x2="656" y2="684"/><line x1="549" y1="547" x2="577" y2="730"/><line x1="573" y1="656" x2="673" y2="477"/><line x1="603" y1="727" x2="717" y2="599"/><line x1="582" y1="460" x2="612" y2="695"/><line x1="472" y1="576" x2="509" y2="729"/><line x1="509" y1="721" x2="502" y2="501"/></g><g fill="#fff"><circle cx="415" cy="637" r="1.4" opacity=".85"/><circle cx="550" cy="703" r="1.4" opacity=".85"/><circle cx="512" cy="515" r="1.4" opacity=".85"/><circle cx="638" cy="703" r="1.4" opacity=".85"/><circle cx="493" cy="482" r="1.4" opacity=".85"/><circle cx="509" cy="729" r="1.4" opacity=".85"/><circle cx="541" cy="613" r="2.4" opacity=".85"/><circle cx="717" cy="599" r="1.8" opacity=".85"/><circle cx="562" cy="625" r="1.8" opacity=".85"/><circle cx="577" cy="730" r="2.4" opacity=".85"/><circle cx="549" cy="547" r="1.8" opacity=".85"/><circle cx="415" cy="609" r="1.4" opacity=".85"/><circle cx="573" cy="656" r="2.4" opacity=".85"/><circle cx="629" cy="600" r="1.8" opacity=".85"/><circle cx="603" cy="727" r="1.4" opacity=".85"/><circle cx="502" cy="501" r="1.8" opacity=".85"/><circle cx="582" cy="460" r="2.4" opacity=".85"/><circle cx="612" cy="695" r="2.4" opacity=".85"/><circle cx="472" cy="576" r="1.4" opacity=".85"/><circle cx="673" cy="477" r="2.4" opacity=".85"/><circle cx="509" cy="721" r="2.4" opacity=".85"/><circle cx="656" cy="684" r="1.8" opacity=".85"/></g></g>
+<ellipse cx="507" cy="502" rx="69" ry="36" transform="rotate(-28 507 502)" fill="#fff" opacity=".10" filter="url(#arGlow)"/>
+<circle cx="565" cy="585" r="165" fill="none" stroke="url(#arRim)" stroke-width="1.6"/>
+<path d="M298,615 A289,82 -22 0 0 796,687" transform="rotate(0)" fill="none" stroke="#f3d79a" stroke-opacity=".5" stroke-width="1.2"/>
+<g class="tw"><circle cx="796" cy="687" r="9" fill="#e2bd74" filter="url(#arGlow)"/><circle cx="796" cy="687" r="3" fill="#fff"/></g>
+</svg>
+{% endraw %}
+      <div class="brandrow">
+        <div class="mark"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></div>
+        <div><strong>Enterprise AI FinOps</strong><span>Platform administration</span></div>
+      </div>
+
+      <div class="al-hero">
+        <h1>Decide who sees AI spend.</h1>
+        <p>Assign administrators, scope them to a tenant domain, and narrow access to specific projects, all from one place.</p>
+      </div>
+
+      <div class="al-points">
+        <div class="al-point">
+          <svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/></svg>
+          <div><b>Global Admin</b>Manages every assignment across all tenants.</div>
+        </div>
+        <div class="al-point">
+          <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+          <div><b>Tenant Admin</b>Limited to one email domain, such as example.com.</div>
+        </div>
+        <div class="al-point">
+          <svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4zM3 12l9 4 9-4M3 17l9 4 9-4"/></svg>
+          <div><b>Project scope</b>Optional. Leave empty to include every project for the domain.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="al-form">
+      <div class="al-form-in">
+        <div class="al-mobile">
+          <div class="mark"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></div>
+          Enterprise AI FinOps
+        </div>
+        <h2>Administrator sign-in</h2>
+        <p class="lead">Enter your local administrator credentials to manage platform access.</p>
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" type="text" autocomplete="username" placeholder="Administrator username" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" onkeydown="if(event.key==='Enter')login()" type="password" autocomplete="current-password" placeholder="Administrator password" required>
+        </div>
+        <button class="submit" onclick="login()">Sign in</button>
+        <div id="loginStatus" class="status" role="alert"></div>
+        <div class="note">
+          <svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+          <div><b>Restricted to authorized administrators</b><small>This is separate from the dashboard's Google sign-in.</small></div>
+        </div>
+      </div>
+      <div class="al-foot">Enterprise AI FinOps · Platform administration</div>
+    </section>
+  </div>
+</section>
+
+<section id="portal">
+  <header class="top">
+    <div class="brandrow">
+      <div class="mark"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></div>
+      <div><strong>Enterprise AI FinOps</strong><span>Platform administration</span></div>
+    </div>
+    <div class="top-sp"></div>
+    <div class="admin-actions">
+      <button class="secondary" onclick="changePassword()">Change password</button>
+      <button class="secondary" onclick="exportCsv()"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Export CSV</button>
+      <button class="secondary" onclick="refresh()"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5"/></svg>Refresh</button>
+      <button class="signout" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="pagehead">
+      <h1>Access management</h1>
+      <p>Manage administrator assignments, verified email domains and project-level access. An empty project list allows matching-domain users across all projects in the authorized usage dataset.</p>
+    </div>
+
+    <div class="admin-stats">
+      <div class="admin-stat"><span>Total assignments</span><strong id="statTotal">—</strong><small>Active, pending and disabled</small></div>
+      <div class="admin-stat s-active"><span>Active</span><strong id="statActive">—</strong><small>Enabled assignments</small></div>
+      <div class="admin-stat s-pending"><span>Pending</span><strong id="statPending">—</strong><small>Awaiting verified activation</small></div>
+      <div class="admin-stat s-disabled"><span>Disabled</span><strong id="statDisabled">—</strong><small>Retained for audit</small></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div><h2>Assign administrator</h2><p>Creates a pending assignment that activates on the user's first verified sign-in.</p></div>
+      </div>
+      <div class="assign-grid">
+        <div class="field"><label for="email">User email</label><input id="email" type="email" placeholder="name@example.com"></div>
+        <div class="field"><label for="role">Role</label>
+          <select id="role" onchange="roleChanged()">
+            <option value="global_admin">Global Admin</option>
+            <option value="tenant_admin">Tenant Admin</option>
+          </select>
+        </div>
+        <div class="field"><label for="tenant">Tenant email domain</label><input id="tenant" type="text" autocomplete="off" placeholder="Tenant email domain (example.com)"></div>
+        <div class="field"><label for="projectIds">Project IDs <span class="muted" style="font-weight:450">(optional)</span></label><input id="projectIds" placeholder="Comma-separated"></div>
+        <button onclick="assign()">Assign</button>
+      </div>
+      <div class="scope-note">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+        <span>Tenant scope is always limited to the assigned email domain. Leave project IDs empty to include all authorized projects for that domain, or list project IDs to narrow access. Disabling keeps the record for audit; removal is separate.</span>
+      </div>
+      <div id="status" class="status" role="status"></div>
+    </div>
+
+    <div class="admin-filters">
+      <input id="adminSearch" placeholder="Search email, domain or project" oninput="renderTables()" aria-label="Search assignments">
+      <select id="adminStatusFilter" onchange="renderTables()" aria-label="Filter by status">
+        <option value="">All statuses</option><option>active</option><option>pending</option><option>disabled</option><option>temporary</option>
+      </select>
+      <select id="adminRoleFilter" onchange="renderTables()" aria-label="Filter by role">
+        <option value="">All roles</option><option value="global_admin">Global Admin</option><option value="tenant_admin">Tenant Admin</option>
+      </select>
+    </div>
+
+    <div class="panel"><div class="panel-head"><div><h2>Global Admins<span class="count" id="globalsCount">0</span></h2><p>Full access to assignments across all tenants.</p></div></div><div id="globals"></div></div>
+    <div class="panel"><div class="panel-head"><div><h2>Tenant Admins<span class="count" id="tenantsCount">0</span></h2><p>Scoped to an email domain, and optionally to specific projects.</p></div></div><div id="tenants"></div></div>
+  </div>
+</section>
+
+<script>
+let csrfToken = '';
+
+async function api(path, method='GET', body) {
+  const headers = {'Content-Type':'application/json'};
+  if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+  const r = await fetch(path, {
+    method, headers, credentials:'same-origin',
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.message || d.error || `HTTP ${r.status}`);
+  return d;
+}
+
+function msg(id, text) {
+  document.getElementById(id).textContent = text || '';
+}
+
+function roleChanged() {
+  const isTenant = document.getElementById('role').value === 'tenant_admin';
+  document.getElementById('tenant').disabled = !isTenant;
+  document.getElementById('projectIds').disabled = !isTenant;
+  document.getElementById('tenant').placeholder = isTenant
+    ? 'Tenant email domain (example.com)'
+    : 'Not applicable to Global Admin';
+  document.getElementById('projectIds').placeholder = isTenant
+    ? 'Project IDs (optional; comma-separated)'
+    : 'Not applicable to Global Admin';
+  if (!isTenant) {
+    document.getElementById('tenant').value = '';
+    document.getElementById('projectIds').value = '';
+  }
+}
+roleChanged();
+
+async function login() {
+  try {
+    await api('/api/admin-access/login','POST',{
+      username:document.getElementById('username').value,
+      password:document.getElementById('password').value
+    });
+    await openPortal();
+  } catch(e) { msg('loginStatus',e.message); }
+}
+
+async function openPortal() {
+  const me = await api('/api/admin-access/me');
+  csrfToken = me.csrf_token || '';
+  document.getElementById('login').style.display='none';
+  document.getElementById('portal').style.display='block';
+  await refresh();
+}
+
+async function logout() {
+  try { await api('/api/admin-access/logout','POST',{}); } finally { location.reload(); }
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+
+let assignmentData = {global_admins: [], tenant_admins: []};
+
+function allRows() {
+  return [...(assignmentData.global_admins || []), ...(assignmentData.tenant_admins || [])];
+}
+
+function filteredRows(rows) {
+  const q = (document.getElementById('adminSearch')?.value || '').trim().toLowerCase();
+  const status = document.getElementById('adminStatusFilter')?.value || '';
+  const role = document.getElementById('adminRoleFilter')?.value || '';
+  return rows.filter(x => {
+    const searchable = [
+      x.email, x.tenant_domain, x.tenant_id, x.role,
+      ...(x.project_ids || [])
+    ].join(' ').toLowerCase();
+    return (!q || searchable.includes(q))
+      && (!status || x.status === status)
+      && (!role || x.role === role);
+  });
+}
+
+function renderStats() {
+  const rows = allRows();
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+  set('statTotal', rows.length);
+  set('statActive', rows.filter(x => x.status === 'active').length);
+  set('statPending', rows.filter(x => x.status === 'pending').length);
+  set('statDisabled', rows.filter(x => x.status === 'disabled').length);
+}
+
+function roleTag(r) {
+  const g = r === 'global_admin';
+  const label = g ? 'Global Admin' : (r === 'tenant_admin' ? 'Tenant Admin' : esc(r));
+  return `<span class="role-tag${g ? ' global' : ''}">${label}</span>`;
+}
+
+function table(rows) {
+  rows = filteredRows(rows);
+  if (!rows.length) return '<div class="empty-state">No matching assignments found.</div>';
+  return '<div class="tablewrap"><table><thead><tr><th>Email</th><th>Role</th><th>Email domain</th><th>Allowed projects</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
+    rows.map(x => {
+      const status = String(x.status || 'active');
+      const pillClass = ['pending','disabled','temporary'].includes(status) ? status : '';
+      const scope = (x.project_ids || []).length
+        ? esc(x.project_ids.join(', '))
+        : (x.role === 'tenant_admin' ? 'All' : '—');
+      let actions = '';
+      if (x.uid && status === 'active' && x.uid !== 'local-bootstrap-admin') {
+        actions += `<button class="secondary" onclick="changeStatus('disable','${esc(x.uid)}','${esc(x.email)}')">Disable</button>`;
+      }
+      if (x.uid === 'local-bootstrap-admin' && status === 'active') {
+        actions += `<button class="secondary" onclick="changeStatus('disable','${esc(x.uid)}','${esc(x.email)}')">Disable</button>`;
+      }
+      if (x.uid && status === 'disabled') {
+        actions += `<button class="secondary" onclick="changeStatus('enable','${esc(x.uid)}','${esc(x.email)}')">Re-enable</button>`;
+      }
+      const removable = (x.uid && x.uid !== 'local-bootstrap-admin')
+        || (status === 'pending' && x.email);
+      if (removable) {
+        actions += `<button class="danger" onclick="removeRole('${esc(x.uid || '')}','${esc(x.email)}')">Remove</button>`;
+      }
+      return `<tr>
+        <td>${esc(x.email)}</td>
+        <td>${roleTag(x.role)}</td>
+        <td>${esc(x.tenant_domain || x.tenant_id || '—')}</td>
+        <td>${scope}</td>
+        <td><span class="status-pill ${pillClass}">${esc(status)}</span></td>
+        <td><div class="admin-actions">${actions || '—'}</div></td>
+      </tr>`;
+    }).join('') + '</tbody></table></div>';
+}
+
+function renderTables() {
+  const g = assignmentData.global_admins || [];
+  const t = assignmentData.tenant_admins || [];
+  document.getElementById('globals').innerHTML = table(g);
+  document.getElementById('tenants').innerHTML = table(t);
+  const gc = document.getElementById('globalsCount');
+  const tc = document.getElementById('tenantsCount');
+  if (gc) gc.textContent = filteredRows(g).length;
+  if (tc) tc.textContent = filteredRows(t).length;
+}
+
+async function refresh() {
+  try {
+    assignmentData = await api('/api/admin-access/assignments');
+    renderStats();
+    renderTables();
+  } catch(e) {
+    msg('status', e.message);
+  }
+}
+
+async function changeStatus(action, uid, email) {
+  let reason = '';
+  if (action === 'disable') {
+    reason = prompt(`Reason for disabling ${email} (for audit purposes):`, '');
+    if (reason === null) return;
+    reason = reason.trim();
+    if (!reason) {
+      msg('status', 'Please provide a reason before disabling this assignment.');
+      return;
+    }
+  } else if (!confirm(`Re-enable administrator access for ${email}?`)) {
+    return;
+  }
+
+  try {
+    await api(`/api/admin-access/${action}`, 'POST', {uid, reason});
+    msg('status', action === 'disable'
+      ? `Disabled ${email}. The assignment remains recorded for audit.`
+      : `Re-enabled ${email}.`);
+    await refresh();
+  } catch(e) {
+    msg('status', e.message);
+  }
+}
+
+
+async function changePassword() {
+  const current_password = prompt('Current local administrator password:');
+  if (current_password === null) return;
+  const new_password = prompt('New password (12+ characters, upper/lowercase, number and symbol):');
+  if (new_password === null) return;
+  const confirm_password = prompt('Confirm new password:');
+  if (confirm_password === null) return;
+
+  try {
+    await api('/api/admin-access/change-password', 'POST', {
+      current_password, new_password, confirm_password
+    });
+    msg('status', 'Password changed successfully. The new password is stored as a secure hash.');
+  } catch (e) {
+    msg('status', e.message);
+  }
+}
+
+function exportCsv() {
+  // Use the authorized endpoint so the export contains the complete register,
+  // including rows outside the current UI filters.
+  const link = document.createElement('a');
+  link.href = '/api/admin-access/export.csv';
+  link.download = 'ai-finops-admin-register.csv';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+async function assign() {
+  try {
+    const d = await api('/api/admin-access/assign','POST',{
+      email:document.getElementById('email').value,
+      role:document.getElementById('role').value,
+      tenant_domain:document.getElementById('tenant').value.trim().toLowerCase(),
+      project_ids:document.getElementById('projectIds').value.split(',').map(x=>x.trim()).filter(Boolean)
+    });
+    msg('status',`Pending assignment created for ${d.email} as ${d.role}.`);
+    await refresh();
+  } catch(e) { msg('status',e.message); }
+}
+
+async function removeRole(uid,email) {
+  if (!confirm(`Remove administrator access for ${email}?`)) return;
+  try {
+    await api('/api/admin-access/remove','POST',{uid,email});
+    msg('status','Assignment removed.');
+    await refresh();
+  } catch(e) { msg('status',e.message); }
+}
+
+(async()=>{
+  try { await openPortal(); } catch(e) {}
+})();
+</script>
+</body>
+</html>
