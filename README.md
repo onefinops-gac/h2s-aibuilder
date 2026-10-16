@@ -1,3 +1,4 @@
+![Uploading gac-logo-transparent.png…]()
 # One FinOps
 
 **The AI cost control tower that sees, explains and stops runaway AI spend.**
